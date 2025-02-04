@@ -74,7 +74,7 @@ Public keys are added here:
 
 
 
-## Update OpenSSH Configuration
+## Add OpenSSH Hosts
 
 I have 2 GitHub accounts that I will be using SSH with. To make scenarios like this easier, update the OpenSSH configuration. 
 
@@ -82,30 +82,24 @@ I have 2 GitHub accounts that I will be using SSH with. To make scenarios like t
 # Open the config file
 code "$HOME\.ssh\config"
 
-# Add this and save
+# Add this and save - note `/`
 Host github-wcd
   HostName github.com
   User git
-  IdentityFile C:\Users\wcd\.ssh\id_github_wcd
+  IdentityFile C:/Users/wcd/.ssh/id_github_wcd
 
 Host github-swatchpie
   HostName github.com
   User git
-  IdentityFile C:\Users\wcd\.ssh\id_github_swatchpie
+  IdentityFile C:/Users/wcd/.ssh/id_github_swatchpie
 
 # Test
 ssh -T github-wcd
 ssh -T github-swatchpie
 
-# You will see something like:
-The authenticity of host 'github.com (140.82.113.3)' can't be established.
-ED25519 key fingerprint is SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU.
-This key is not known by any other names.
-Are you sure you want to continue connecting (yes/no/[fingerprint])? y
-Please type 'yes', 'no' or the fingerprint: yes
-Warning: Permanently added 'github.com' (ED25519) to the list of known hosts.
-git@github.com: Permission denied (publickey).
-
+# In subsequent steps you will see:
+git@github-wcd
+git@github-swatchpie
 ```
 
 ## Install Git for Windows
@@ -181,7 +175,7 @@ The easiest way to use a repository profile is to open the repo in VS Code and u
 # Show the current config
 # Use `q` to exit.
 git config --list
-q 
+q
 
 # Add profiles
 git config user.name "wcDogg"
@@ -204,36 +198,32 @@ To fix or prevent this, you must add the directory explicitly to Git's global co
 
 ```powershell
 # List safe directories
-git config --global --get-all safe.directory
+git config --global --list
 
 # Mark as safe
-git config --global --add safe.directory F:/wcDogg/windows
+git config --global --add safe.directory "F:/wcDogg/windows"
+git config --global --add safe.directory "F:\\wcDogg\\windows"
+git config --global --add safe.directory "F:/Script-Hero"
 
 # Remove all safe directories
 git config --global --unset-all safe.directory
 
 # Remove a specific safe directory
 git config --global --unset safe.directory F:/wcDogg/windows
-
 ``` 
 
-## Update New and Existing Local Repositories
+## Update Existing Local Repos
 
 As mentioned above, if you are working with multiple GitHub accounts, **I strongly recommend using all repo-level Git profiles**. When you do, there are a few things that should become routine each time you clone a repository. These steps should also be performed for existing local repositories. 
 
-For me, the first thing is to mark the directory as safe in my global Git configuration: 
+For me, the first thing is to mark the directory as safe in my global Git configuration and set the correct Git profile.
 
 ```powershell
-# Mark as safe
-git config --global --add safe.directory F:/wcDogg/windows
+# Mark directory as safe
+git config --global --add safe.directory "F:/wcDogg/windows"
+git config --global --add safe.directory "F:\\wcDogg\\windows"
 
-# Restart the terminal and confirm:
-git config --global --get-all safe.directory
-``` 
-
-Second is to set the correct Git profile. 
-
-```powershell
+# Set the Git profile
 git config user.name "wcDogg"
 git config user.email "wcDogg@users.noreply.github.com"
 
@@ -241,9 +231,191 @@ git config user.name "swatchpie"
 git config user.email "SwatchPie@users.noreply.github.com"
 ```
 
+And the next thing is to update the remote.
+
+```powershell
+# Recall my hosts are:
+github-wcd
+github-swatchpie
+
+# Check the current remote
+git remote -v
+
+# See something like:
+origin  https://github.com/wcDogg/windows.git (fetch)
+origin  https://github.com/wcDogg/windows.git (push)
+
+# Update the remote and verify.
+git remote set-url origin git@github-wcd:wcDogg/windows.git
+git remote -v
+
+# You should see something like the following.
+# Note how the remote now uses the `github-wcd` host we configured.
+origin  git@github-wcd:wcDogg/windows.git (fetch)
+origin  git@github-wcd:wcDogg/windows.git (push)
+```
+
+Once you have completed the steps above, VS Code and GitHub should be communicating. 
+
+1. Make a test change to the repo. 
+2. Note that VS Code indicates that changes are waiting for commit. 
+3. Switch to the 'Source Control' panel 
+4. Use the VS Code UI to push the change. 
+
+
+## New Repo from Local Directory
+
+Assumes local directory already contains a `README.md`, `.gitignore`, and `LICENSE`. 
+
+```powershell
+# Initialize the repo
+git init -b main
+
+# I originally skipped this, and was prompted
+# for it down the road. So let's just do it now.
+# You need your GH PAT for this. 
+gh auth login
+
+# Mark directory as safe
+git config --global --add safe.directory F:/wcDogg/windows
+
+# Restart the terminal and confirm:
+git config --global --get-all safe.directory
+
+# Set the Git profile
+git config user.name "wcDogg"
+git config user.email "wcDogg@users.noreply.github.com"
+
+git config user.name "swatchpie"
+git config user.email "SwatchPie@users.noreply.github.com"
+
+# Create the repo
+git add . && git commit -m "Initial commit"
+git status
+gh repo create
+
+
+# Check the current remote
+git remote -v
+
+# See something like:
+origin  git@github.com:SwatchPie/script-hero-for-illustrator.git (fetch)
+origin  git@github.com:SwatchPie/script-hero-for-illustrator.git (push)
+
+# It needs to look like this - using SSH Host profile:
+
+origin  git@github-swatchpie:SWatchPie/script-hero-for-illustrator.git (fetch)
+origin  git@github-swatchpie:SWatchPie/script-hero-for-illustrator.git (push)
+
+```powershell
+# Connect - 'origin' is the 'name' of this URL
+remote add origin <repo URL>
+
+# View all of the URLs associated with a repo
+git remote -v
+```
+
+## Basic Git Commands
+
+* https://www.youtube.com/watch?v=apGV9Kg7ics
+* https://www.youtube.com/watch?v=SD7YNLv5Evc
+
+```powershell
+# Clone existing repo
+git clone https://github.com/SqueezeSoftware/JSONpie.git
+
+# See the status of changes
+git status
+
+# Stage changes
+git add .
+git add file.txt
+git add dir-name
+
+# Remove file from stage
+git restore --staged README.md
+
+# Commit 
+git commit -m "Commit message"
+
+# Stage + commit all changes
+git add . && git commit -m "Commit message"
+
+# Push changes to current branch
+git push
+
+# Push changes to a different branch
+git push origin branchname
+
+# View commit history
+git log
+
+# You can also do this - press Q to exit
+git log --all --graph
+
+# See the contents of a file
+cat README.md
+```
+
+## Revert to an Earlier Commit not yet Pushed
+
+```powershell
+# Get the commit's ID
+git log
+
+# Revert
+git reset f73d30fa32fd393813714c533357447f435d3f06
+
+# View un-staged changes
+git status
+```
+
+## Stashing Changes 
+
+Stash only works once the project has an initial commit.
+
+```powershell
+# Stage what will be stashed
+git add .
+
+# Review
+git status
+
+# Stash 
+git stash
+
+# Bring stashed back
+git stash pop
+
+# Discard stashed - permanent + irreversible
+git stash clear
+```
+
+## Branching
+
+```powershell
+# List local branches
+git branch
+
+# List remote branches
+git branch -r
+
+# Create local + push to GitHub
+git branch dbot
+git push -u origin dbot
+
+# Switch branches
+git checkout dbot
+
+# Merge branch to main
+git checkout main
+git merge dbot -m "Dependency version updates"
+git push
+```
+
 ## PowerShell Function to Update Repositories
 
-Because this needs to be routine, I wrote a PowerShell script to ease the process:
+Because this needs to be routine, I wrote a PowerShell `set-sh` script to mark directories as safe and set the Git profile. Note it does not update local remotes. 
 
 ```powershell
 # Open profile 
@@ -313,48 +485,6 @@ function set-gh {
   Write-Host "-------------------------------------------------------------"
 }
 ```
-
-
-
-## Update Local Repository Remotes
-
-If you have cloned GitHub repositories already on your computer, you will/may need to: 
-
-- Add the repo to Git's list of safe directories.
-- Update Git profile associated with the repository. 
-- Update the repository remote to use the correct  `.ssh/config` Host. 
-
-Open the repository in VS Code and use the Terminal from there. 
-
-```powershell
-# Recall my hosts are:
-github-wcd
-github-swatchpie
-
-# Check the current remote
-git remote -v
-
-# You will see something like:
-origin  https://github.com/wcDogg/windows.git (fetch)
-origin  https://github.com/wcDogg/windows.git (push)
-
-# Update the remote and verify.
-git remote set-url origin git@github-wcd:wcDogg/windows.git
-git remote -v
-
-# You should see something like the following.
-# Note how the remote now uses the `github-wcd` host we configured.
-origin  git@github-wcd:wcDogg/windows.git (fetch)
-origin  git@github-wcd:wcDogg/windows.git (push)
-```
-
-Once you have completed the steps above, VS Code and GitHub should be communicating. 
-
-1. Make a test change to the repo. 
-2. Note that VS Code indicates that changes are waiting for commit. 
-3. Switch to the 'Source Control' panel 
-4. Use the VS Code UI to push the change. 
-
 
 ## Update Git for Windows
 
