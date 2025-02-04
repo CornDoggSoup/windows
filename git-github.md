@@ -214,7 +214,7 @@ git config --global --unset safe.directory F:/wcDogg/windows
 
 ## Update Existing Local Repos
 
-As mentioned above, if you are working with multiple GitHub accounts, **I strongly recommend using all repo-level Git profiles**. When you do, there are a few things that should become routine each time you clone a repository. These steps should also be performed for existing local repositories. 
+As mentioned above, if you are working with multiple GitHub accounts, **I strongly recommend using all repo-level Git profiles**. When you do, there are a few things that should become routine. These steps should also be performed for existing local repositories. 
 
 For me, the first thing is to mark the directory as safe in my global Git configuration and set the correct Git profile.
 
@@ -268,51 +268,82 @@ Once you have completed the steps above, VS Code and GitHub should be communicat
 Assumes local directory already contains a `README.md`, `.gitignore`, and `LICENSE`. 
 
 ```powershell
-# Initialize the repo
+# Initialize the repo and confirm
 git init -b main
 
-# I originally skipped this, and was prompted
-# for it down the road. So let's just do it now.
-# You need your GH PAT for this. 
-gh auth login
+# Mark directory as safe and confirm
+git config --global --add safe.directory "F:/Script-Hero"
+git config --global --list
 
-# Mark directory as safe
-git config --global --add safe.directory F:/wcDogg/windows
-
-# Restart the terminal and confirm:
-git config --global --get-all safe.directory
-
-# Set the Git profile
+# Set the Git profile and confirm
 git config user.name "wcDogg"
 git config user.email "wcDogg@users.noreply.github.com"
 
 git config user.name "swatchpie"
 git config user.email "SwatchPie@users.noreply.github.com"
 
-# Create the repo
+git config --get user.name
+git config --get user.email
+
+# Confirm Git initialized correctly
+git rev-parse --is-inside-work-tree
+
+# Test GH authentication
+gh auth status
+
+>> github.com
+>>   ✓ Logged in to github.com as SwatchPie (keyring)
+>>   ✓ Git operations for github.com configured to use ssh protocol.
+>>   ✓ Token: ghp_************************************
+>>   ✓ Token scopes: admin:public_key, read:org, repo, workflow
+
+# Create a public repo
+gh repo create SwatchPie/script-hero-for-illustrator --public --source . --remote ssh
+
+>> ✓ Created repository SwatchPie/script-hero-for-illustrator on GitHub
+>> ✓ Added remote git@github.com:SwatchPie/script-hero-for-illustrator.git
+
+# Create a private repo
+gh repo create SwatchPie/script-hero-for-illustrator --private --source . --remote ssh
+
+# Check the remote - note it is not using the SSH hosts
+git remote -v
+
+>> ssh     git@github.com:SwatchPie/script-hero-for-illustrator.git (fetch)
+>> ssh     git@github.com:SwatchPie/script-hero-for-illustrator.git (push)
+
+# Update remote to use SSH host
+git remote set-url ssh git@github-swatchpie:SwatchPie/script-hero-for-illustrator.git
+
+# Check the remote - it should now use the SSH host
+git remote -v
+
+>> ssh   git@github-swatchpie:SwatchPie/script-hero-for-illustrator.git (fetch)
+>> ssh   git@github-swatchpie:SwatchPie/script-hero-for-illustrator.git (push)
+
+# Stage and commit initial content
 git add . && git commit -m "Initial commit"
-git status
-gh repo create
 
+>> 3 files changed, 32 insertions(+)
+>> create mode 100644 .gitignore
+>> create mode 100644 LICENSE
+>> create mode 100644 README.md
 
-# Check the current remote
-git remote -v
+# Push to GitHub
+git push ssh main
 
-# See something like:
-origin  git@github.com:SwatchPie/script-hero-for-illustrator.git (fetch)
-origin  git@github.com:SwatchPie/script-hero-for-illustrator.git (push)
+>> Enumerating objects: 5, done.
+>> Counting objects: 100% (5/5), done.
+>> Delta compression using up to 24 threads
+>> Compressing objects: 100% (4/4), done.
+>> Writing objects: 100% (5/5), 881 bytes | 881.00 KiB/s, done.
+>> Total 5 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+>> To github-swatchpie:SwatchPie/ghithub-test.git
+>>  * [new branch]      main -> main
 
-# It needs to look like this - using SSH Host profile:
-
-origin  git@github-swatchpie:SWatchPie/script-hero-for-illustrator.git (fetch)
-origin  git@github-swatchpie:SWatchPie/script-hero-for-illustrator.git (push)
-
-```powershell
-# Connect - 'origin' is the 'name' of this URL
-remote add origin <repo URL>
-
-# View all of the URLs associated with a repo
-git remote -v
+# Verify on GitHub.
+# Make a test change.
+# Use VS Code UI to commit the change. 
 ```
 
 ## Basic Git Commands
